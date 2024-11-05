@@ -6,13 +6,13 @@ from copy import deepcopy
 sys.path.append('./')  # to run '$ python *.py' files in subdirectories
 logger = logging.getLogger(__name__)
 import torch
-from models.common import *
-from models.experimental import *
-from utils.autoanchor import check_anchor_order
-from utils.general import make_divisible, check_file, set_logging
-from utils.torch_utils import time_synchronized, fuse_conv_and_bn, model_info, scale_img, initialize_weights, \
+from detectors.intelligentAlgorithm.yolov7.models.common import *
+from detectors.intelligentAlgorithm.yolov7.models.experimental import *
+from detectors.intelligentAlgorithm.yolov7.utils.autoanchor import check_anchor_order
+from detectors.intelligentAlgorithm.yolov7.utils.general import make_divisible, check_file, set_logging
+from detectors.intelligentAlgorithm.yolov7.utils.torch_utils import time_synchronized, fuse_conv_and_bn, model_info, scale_img, initialize_weights, \
     select_device, copy_attr
-from utils.loss import SigmoidBin
+from detectors.intelligentAlgorithm.yolov7.utils.loss import SigmoidBin
 
 try:
     import thop  # for FLOPS computation
@@ -51,7 +51,7 @@ class Detect(nn.Module):
             if not self.training:  # inference
                 if self.grid[i].shape[2:4] != x[i].shape[2:4]:
                     self.grid[i] = self._make_grid(nx, ny).to(x[i].device)
-                y = x[i].sigmoid()
+                y = x[i].sigmoid().clone()
                 if not torch.onnx.is_in_onnx_export():
                     y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
@@ -78,7 +78,7 @@ class Detect(nn.Module):
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)],indexing = 'ij')
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
     def convert(self, z):
@@ -191,7 +191,7 @@ class IDetect(nn.Module):
             
     @staticmethod
     def _make_grid(nx=20, ny=20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)],indexing = 'ij')
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
     def convert(self, z):
@@ -304,7 +304,7 @@ class IKeypoint(nn.Module):
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)],indexing = 'ij')
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
 
@@ -414,7 +414,7 @@ class IAuxDetect(nn.Module):
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)],indexing = 'ij')
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
     def convert(self, z):
@@ -501,7 +501,7 @@ class IBin(nn.Module):
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)],indexing = 'ij')
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
 
